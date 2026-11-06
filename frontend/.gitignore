@@ -1,0 +1,24 @@
+# Secretos y configuraciones locales
+.env
+.env.*
+!.env.example
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Dependencias frontend, cuando existan
+node_modules/
+
+# Claves generadas (contiene contraseñas — nunca subir)
+usuarios_con_claves.csv
+
+# Bases de datos y respaldos locales
+*.sqlite3
+*.db
+backups/

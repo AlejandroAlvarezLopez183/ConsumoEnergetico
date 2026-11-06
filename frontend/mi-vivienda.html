@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mi vivienda · SNRGY</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/snrgy.css">
+<style>
+body{font-size:14px}
+.top{position:relative}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+.tr{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.seg button{font-weight:500}.seg button[aria-pressed="true"]{font-weight:600}
+.page-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:10px 20px;padding:26px 0 6px}
+.page-h h1{font-size:clamp(22px,3vw,30px);letter-spacing:-.025em;line-height:1.15}
+.page-h p{color:var(--ink-2);margin-top:4px}
+.fresh{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2);border:1px solid var(--border);border-radius:999px;padding:2px 11px 2px 9px;background:var(--surface)}
+.fresh i{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.fresh.live i{background:var(--good)}.fresh.late i{background:var(--warn)}
+.loading{padding:80px 0;text-align:center;color:var(--muted)}
+.banner{display:flex;gap:12px;align-items:flex-start;margin:16px 0 0;padding:12px 14px;border-radius:12px;background:#fff7e0;border:1px solid #f2dc9a;color:#5c4700;font-size:13.5px}
+.banner svg{flex:none;margin-top:1px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:18px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px}
+.kpi .l{font-size:12.5px;color:var(--muted)}
+.kpi .v{font-size:28px;font-weight:700;letter-spacing:-.03em;line-height:1.15;margin-top:2px}
+.kpi .v small{font-size:13px;font-weight:500;color:var(--ink-2);letter-spacing:0;margin-left:3px}
+.kpi .s{font-size:12.5px;color:var(--ink-2);margin-top:2px}
+h2.sh{font-size:19px;letter-spacing:-.02em;margin:34px 0 4px}
+.sh-p{color:var(--ink-2);margin-bottom:14px;font-size:14px}
+.recs{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.rec{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--axis);border-radius:var(--r);padding:16px 18px}
+.rec.warn{border-left-color:var(--warn)}.rec.good{border-left-color:var(--good)}.rec.info{border-left-color:var(--s1)}
+.rec h3{display:flex;gap:9px;align-items:flex-start;font-size:15.5px;letter-spacing:-.01em;line-height:1.3}
+.rec h3 svg{flex:none;margin-top:2px}
+.rec p{color:var(--ink-2);margin-top:8px;font-size:14px}
+.rec .why{font-size:12.5px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)}
+.charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 16px 10px;min-width:0}
+.card h3{font-size:15px}
+.card .cs{font-size:12.5px;color:var(--muted);margin:2px 0 8px}
+.card.wide{grid-column:1/-1}
+.ch{width:100%}.ch svg{display:block;width:100%;height:auto;overflow:visible}
+.ch .tx{font:11px var(--font);fill:#6e6e73}.ch .gl{stroke:var(--grid)}.ch .ax{stroke:var(--axis)}
+.lg{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12px;color:var(--ink-2);margin:6px 0 4px}
+.lg span{display:inline-flex;align-items:center;gap:6px}
+.lg i{width:11px;height:11px;border-radius:3px;display:inline-block}
+.empty{padding:36px 20px;text-align:center;background:var(--surface);border:1px dashed var(--axis);border-radius:var(--r);color:var(--ink-2)}
+.empty h2{font-size:19px;color:var(--ink);margin-bottom:6px}
+.sens{display:grid;gap:10px}
+.sn{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 14px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px}
+.sn b{font-size:14.5px}
+.sn .m{color:var(--muted);font-size:12.5px}
+.pill{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--axis);border-radius:999px;padding:2px 11px 2px 9px;font-size:12.5px;white-space:nowrap}
+.pill i{width:9px;height:9px;border-radius:50%}
+.pill.good i{background:var(--good)}.pill.warn i{background:var(--warn);border-radius:2px;transform:rotate(45deg)}.pill.crit i{background:var(--crit);border-radius:2px}
+.note{color:var(--muted);font-size:12.5px;margin:26px 0 40px;max-width:760px}
+@media (max-width:900px){.charts{grid-template-columns:1fr}.recs{grid-template-columns:1fr}.sn{grid-template-columns:1fr auto}.sn .m{grid-column:1/-1}}
+@media (max-width:620px){.wrap{padding:0 16px}.top{padding:9px 16px 8px}.page-h{padding-top:18px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="index.html" aria-label="SNRGY"><img src="logo.png" alt="" width="23" height="32"><b>SNRGY</b><span>Mi vivienda</span></a>
+  <div class="tr">
+    <div class="seg" role="group" aria-label="Días a mostrar" id="range"><button type="button" data-n="7" aria-pressed="false">7 días</button><button type="button" data-n="14" aria-pressed="false">14 días</button><button type="button" data-n="20" aria-pressed="true">20 días</button></div>
+    <div class="seg" role="group" aria-label="Idioma" data-lang><button type="button" data-l="es" aria-pressed="true">ES</button><button type="button" data-l="en" aria-pressed="false">EN</button></div>
+    <button class="btn" id="out" type="button">Cerrar sesión</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="loading" id="loading" role="status">Cargando tus datos…</div>
+  <div id="app" hidden>
+    <div class="page-h">
+      <div><h1 id="hT"></h1><p id="hS" data-noi18n></p></div>
+      <span class="fresh" id="fresh" data-noi18n><i></i><span></span></span>
+    </div>
+    <div id="banner"></div>
+    <div id="body"></div>
+    <p class="note">Las recomendaciones son orientativas: se calculan con tus lecturas confiables del periodo elegido y no sustituyen la revisión de una persona técnica. Los días con lecturas incompletas se estiman a partir del contador del medidor y se marcan con rayas.</p>
+  </div>
+  <div class="empty" id="fail" hidden><h2>No pudimos cargar tus datos</h2><p>Revisa tu conexión e inténtalo de nuevo. Si sigue pasando, avisa al laboratorio.</p><p style="margin-top:14px"><button class="btn pri" type="button" onclick="location.reload()">Reintentar</button></p></div>
+</main>
+
+<script src="config.js"></script>
+<script src="vendor/supabase.js"></script>
+<script src="js/core.js"></script>
+<script src="js/vivienda.js"></script>
+</body>
+</html>
