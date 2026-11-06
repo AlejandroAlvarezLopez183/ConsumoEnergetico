@@ -15,6 +15,7 @@ jobs:
   pipeline:
     name: Recolectar + ETL + Subir
     runs-on: ubuntu-latest
+    environment: Consumo        # ← usa los secrets del environment que ya creaste
     defaults:
       run:
         working-directory: backend
