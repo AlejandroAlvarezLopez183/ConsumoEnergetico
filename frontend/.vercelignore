@@ -1,0 +1,7 @@
+supabase/
+scripts/
+Dockerfile
+.dockerignore
+nginx.conf
+CONTRIBUTING.md
+README.md

@@ -1,0 +1,27 @@
+# ── Secretos y configuración local (NUNCA subir) ──────────────
+.env
+.env.*
+!.env.example
+
+# Claves generadas de usuarios (contienen contraseñas)
+usuarios_con_claves.csv
+
+# ── Python ────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# ── Node (por si se agrega tooling) ───────────────────────────
+node_modules/
+
+# ── Sistema operativo ─────────────────────────────────────────
+.DS_Store
+
+# ── Herramientas locales ──────────────────────────────────────
+.trae-html-share-packages/
+
+# ── Bases de datos y respaldos locales ────────────────────────
+*.sqlite3
+*.db
+backups/

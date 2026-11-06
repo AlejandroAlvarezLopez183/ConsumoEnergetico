@@ -1,0 +1,17 @@
+{
+  "viviendas": {
+    "Vivienda JoseIgnacio": {
+      "codigo": "Vivienda-001",
+      "enabled": true,
+      "ubicacion": {
+        "latitud": 25.618804,
+        "longitud": -100.295084
+      },
+      "sensores": [
+        {
+          "codigo": "EM-001"
+        }
+      ]
+    }
+  }
+}

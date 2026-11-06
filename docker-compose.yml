@@ -1,0 +1,96 @@
+# SNRGY — Energy Platform TEC
+# Orquestación de los tres sub-proyectos:
+#   frontend -> sitio estático (watty) servido con nginx
+#   backend  -> colector de datos Tuya (energy-plataform) corriendo 24/7
+#   etl      -> convierte los CSV crudos en data/data.json (horario)
+#
+# Uso:
+#   1. Rellenar las credenciales de Tuya en backend/.env
+#   2. Crear config/devices.json y config/viviendas.json a partir de los .example
+#   3. docker compose up -d --build
+#
+# Flujo de datos: Tuya -> backend (CSV) -> etl (data.json) -> Supabase -> frontend.
+# El etl comparte el volumen snrgy-data con el backend y se ejecuta cada
+# ETL_INTERVAL_SECONDS (por defecto 3600 = 1 hora).
+
+name: snrgy
+
+services:
+  # ─────────────────────────────────────────────────────────────
+  # Backend: recolector de lecturas de las 18 viviendas (Tuya Cloud)
+  # ─────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: snrgy-backend:latest
+    container_name: snrgy-backend
+    restart: unless-stopped
+    init: true
+    # SIGINT permite que el script imprima su cierre ordenado en "docker compose stop"
+    stop_signal: SIGINT
+    stop_grace_period: 30s
+    # Credenciales de Tuya: única fuente de verdad en el .env del backend
+    # (no se duplican en la raíz para evitar desincronización).
+    env_file:
+      - ./backend/.env
+    environment:
+      COLLECT_INTERVAL_SECONDS: ${COLLECT_INTERVAL_SECONDS:-600}
+      TZ: ${TZ:-America/Monterrey}
+    volumes:
+      # Configuración real (devices.json / viviendas.json); solo lectura.
+      - ./backend/config:/app/config:ro
+      # CSVs generados; persisten entre reinicios y actualizaciones de la imagen.
+      - snrgy-data:/app/data
+
+  # ─────────────────────────────────────────────────────────────
+  # ETL: CSV crudos -> data/data.json (series horarias por vivienda)
+  #      Reutiliza la imagen del backend y el volumen snrgy-data.
+  # ─────────────────────────────────────────────────────────────
+  etl:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: snrgy-backend:latest
+    container_name: snrgy-etl
+    restart: unless-stopped
+    init: true
+    depends_on:
+      - backend
+    # Credenciales de Supabase (SUPABASE_URL / SUPABASE_SERVICE_KEY) para --subir.
+    env_file:
+      - ./backend/.env
+    environment:
+      # Segundos entre corridas del ETL (por defecto 3600 = 1 hora).
+      ETL_INTERVAL_SECONDS: ${ETL_INTERVAL_SECONDS:-3600}
+      TZ: ${TZ:-America/Monterrey}
+    volumes:
+      # Mismo volumen que el backend: lee data/viviendas/*.csv y escribe
+      # data/data.json sin tocar la data cruda.
+      - snrgy-data:/app/data
+    # Una corrida inmediata (valida y sube a Supabase) y luego cada
+    # ETL_INTERVAL_SECONDS. Un fallo puntual no tumba el contenedor.
+    command:
+      - sh
+      - -c
+      - |
+        while true; do
+          python scripts/build_dataset.py --entrada data/viviendas --salida data/data.json --subir || echo "ETL: corrida fallida, se reintenta";
+          sleep "$${ETL_INTERVAL_SECONDS:-3600}";
+        done
+
+  # ─────────────────────────────────────────────────────────────
+  # Frontend: sitio SNRGY (HTML/CSS/JS) servido como estático
+  # ─────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: snrgy-frontend:latest
+    container_name: snrgy-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+
+volumes:
+  snrgy-data:

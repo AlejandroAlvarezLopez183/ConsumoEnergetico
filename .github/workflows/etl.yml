@@ -1,0 +1,62 @@
+name: Pipeline completo — Recolectar Tuya + ETL + Supabase
+
+on:
+  # Corre automáticamente cada 10 minutos (igual que el monitor actual)
+  # Ajusta el intervalo a lo que necesites:
+  #   cada hora    →  '0 * * * *'
+  #   cada 10 min  →  '*/10 * * * *'
+  schedule:
+    - cron: '*/10 * * * *'
+
+  # También puedes lanzarlo a mano desde la pestaña Actions de GitHub
+  workflow_dispatch:
+
+jobs:
+  pipeline:
+    name: Recolectar + ETL + Subir
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      # 1. Descarga el código
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. Instala Python 3.10
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+
+      # 3. Instala dependencias (requests, python-dotenv, tzdata)
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      # 4. Escribe los archivos de configuración desde los secrets de GitHub
+      #    (así no subes devices.json ni viviendas.json al repo)
+      - name: Escribir config/devices.json
+        run: |
+          mkdir -p config
+          echo '${{ secrets.DEVICES_JSON }}' > config/devices.json
+
+      - name: Escribir config/viviendas.json
+        run: |
+          mkdir -p config
+          echo '${{ secrets.VIVIENDAS_JSON }}' > config/viviendas.json
+
+      # 5. Corre el pipeline completo:
+      #    descarga CSV → recolecta Tuya → ETL → sube a Supabase → archiva CSV
+      - name: Correr pipeline completo
+        run: python scripts/run_pipeline.py
+        env:
+          TUYA_CLIENT_ID: ${{ secrets.TUYA_CLIENT_ID }}
+          TUYA_CLIENT_SECRET: ${{ secrets.TUYA_CLIENT_SECRET }}
+          TUYA_BASE_URL: ${{ secrets.TUYA_BASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          PYTHONPATH: .
+

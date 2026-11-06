@@ -1,0 +1,48 @@
+# Blueprint de Render para el recolector + ETL de SNRGY.
+# El frontend NO va aquí: se publica estático en Vercel (Root Directory: frontend).
+#
+# Render no monta disco persistente en Cron Jobs. Cada corrida:
+#   1. Restaura los CSV desde Supabase Storage
+#   2. Hace una ronda de Tuya
+#   3. Construye data.json y lo sube a Postgres
+#   4. Vuelve a archivar los CSV
+#
+# En el dashboard, después de aplicar el Blueprint:
+#   - Completa las env vars marcadas sync: false
+#   - Secret Files: devices.json y viviendas.json
+#     (mismos contenidos que backend/config/ local)
+
+previewsEnabled: false
+
+services:
+  - type: cron
+    name: snrgy-pipeline
+    runtime: python
+    rootDir: backend
+    plan: starter
+    region: oregon
+    schedule: "*/10 * * * *"
+    buildCommand: pip install -r requirements.txt
+    startCommand: python scripts/run_pipeline.py
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+      - key: PYTHONPATH
+        value: .
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: TZ
+        value: America/Monterrey
+      - key: TUYA_BASE_URL
+        value: https://openapi.tuyaus.com
+      - key: SUPABASE_CSV_BUCKET
+        value: snrgy-csv
+      - key: TUYA_CLIENT_ID
+        sync: false
+      - key: TUYA_CLIENT_SECRET
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
