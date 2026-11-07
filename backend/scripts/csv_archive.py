@@ -36,9 +36,10 @@ class StorageError(RuntimeError):
 
 
 def _settings() -> tuple[str, str, str]:
-    url = os.environ.get("SUPABASE_URL", "").rstrip("/")
-    key = os.environ.get("SUPABASE_SERVICE_KEY", "")
-    bucket = os.environ.get("SUPABASE_CSV_BUCKET", DEFAULT_BUCKET)
+    url = os.environ.get("SUPABASE_URL", "").strip().rstrip("/")
+    key = os.environ.get("SUPABASE_SERVICE_KEY", "").strip()
+    key = key.replace("\r", "").replace("\n", "")
+    bucket = os.environ.get("SUPABASE_CSV_BUCKET", DEFAULT_BUCKET).strip() or DEFAULT_BUCKET
 
     if not url or not key:
         raise SystemExit(
