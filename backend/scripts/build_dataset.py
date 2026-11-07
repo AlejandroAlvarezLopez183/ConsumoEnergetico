@@ -677,8 +677,9 @@ def resumen_dataset(dataset):
 def upload_to_supabase(dataset):
     """Sube `meta` y `vivienda_datos` con la clave service_role (nunca en el navegador)."""
 
-    url = os.environ.get("SUPABASE_URL", "").rstrip("/")
-    key = os.environ.get("SUPABASE_SERVICE_KEY", "")
+    url = os.environ.get("SUPABASE_URL", "").strip().rstrip("/")
+    key = os.environ.get("SUPABASE_SERVICE_KEY", "").strip()
+    key = key.replace("\r", "").replace("\n", "")
 
     if not url or not key:
         raise SystemExit(
