@@ -1,6 +1,10 @@
 name: Pipeline completo — Recolectar Tuya + ETL + Supabase
 
 on:
+  # Ejecuta también en Pull Requests hacia main
+  pull_request:
+    branches: [ main ]
+
   # Corre automáticamente cada 10 minutos (igual que el monitor actual)
   # Ajusta el intervalo a lo que necesites:
   #   cada hora    →  '0 * * * *'
@@ -60,4 +64,3 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           PYTHONPATH: .
-
