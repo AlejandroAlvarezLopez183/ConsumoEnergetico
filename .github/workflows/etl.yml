@@ -6,7 +6,7 @@ on:
   #   cada hora    →  '0 * * * *'
   #   cada 10 min  →  '*/10 * * * *'
   schedule:
-    - cron: '0 * * * *'
+    - cron: '18 * * * *'
 
   # También puedes lanzarlo a mano desde la pestaña Actions de GitHub
   workflow_dispatch:
