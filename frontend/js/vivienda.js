@@ -10,7 +10,7 @@ const hh=h=>String(h).padStart(2,'0')+':00';
 
 S.addEN({
 "Mi vivienda · SNRGY":"My home · SNRGY","Mi vivienda":"My home","Cerrar sesión":"Sign out","Idioma":"Language","Días a mostrar":"Days to show",
-"7 días":"7 days","14 días":"14 days","20 días":"20 days","Cargando tus datos…":"Loading your data…",
+"7 días":"7 days","1 día":"1 day","3 días":"3 days","14 días":"14 days","30 días":"30 days","Cargando tus datos…":"Loading your data…",
 "No pudimos cargar tus datos":"We couldn't load your data","Revisa tu conexión e inténtalo de nuevo. Si sigue pasando, avisa al laboratorio.":"Check your connection and try again. If it keeps happening, let the lab know.","Reintentar":"Try again",
 "Las recomendaciones son orientativas: se calculan con tus lecturas confiables del periodo elegido y no sustituyen la revisión de una persona técnica. Los días con lecturas incompletas se estiman a partir del contador del medidor y se marcan con rayas.":"Recommendations are indicative: they are computed from your reliable readings in the chosen period and do not replace an inspection by a technician. Days with incomplete readings are estimated from the meter's counter and shown striped.",
 "Tu consumo":"Your consumption","Consumo de {v}":"Energy use of {v}",
@@ -68,7 +68,7 @@ S.addEN({
 "{x} kWh el {d}":"{x} kWh on {d}","{x} kWh a las {h}":"{x} kWh at {h}","{x} kW el {d}":"{x} kW on {d}","{x} V":"{x} V"
 });
 
-let H,META,state={range:20},ND,NH,START;
+let H,META,state={range:30},ND,NH,START;
 const dayDate=d=>new Date(START[0],START[1]-1,START[2]+d);
 const dLab=d=>{const x=dayDate(d);return S.lang()==='en'?MES.en[x.getMonth()]+' '+x.getDate():x.getDate()+' '+MES.es[x.getMonth()]};
 const dLabL=d=>{const x=dayDate(d);return DIA[S.lang()][x.getDay()]+', '+dLab(d)};

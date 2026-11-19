@@ -931,9 +931,11 @@ dialog#alerts::backdrop{background:rgba(10,10,11,.28)}
   <div class="top-r">
     <label class="field"><span class="sr" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Mes</span><select id="month" aria-label="Mes a consultar"></select></label>
     <div class="seg" role="group" aria-label="Días a mostrar" id="range">
-      <button type="button" data-n="7" aria-pressed="false">7 días</button>
+      <button type="button" data-n="1"  aria-pressed="false">1 día</button>
+      <button type="button" data-n="3"  aria-pressed="false">3 días</button>
+      <button type="button" data-n="7"  aria-pressed="false">7 días</button>
       <button type="button" data-n="14" aria-pressed="false">14 días</button>
-      <button type="button" data-n="20" aria-pressed="true">20 días</button>
+      <button type="button" data-n="30" aria-pressed="true">30 días</button>
     </div>
     <div class="seg langseg" role="group" aria-label="Idioma" id="lang"><button type="button" data-l="es" aria-pressed="true">ES</button><button type="button" data-l="en" aria-pressed="false">EN</button></div>
     <button type="button" class="alertbtn" id="alertsBtn" aria-haspopup="dialog"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg><span class="txt">Alertas</span><span class="n" id="alCount">0</span></button>
@@ -1092,6 +1094,10 @@ const EN={
 "Mes": "Month",
 "Días a mostrar": "Days to show",
 "7 días": "7 days",
+"1 día": "1 day",
+"3 días": "3 days",
+"14 días": "14 days",
+"30 días": "30 days",
 "14 días": "14 days",
 "20 días": "20 days",
 "Idioma": "Language",
@@ -1316,7 +1322,7 @@ const CODE_SEV={OK:'good',INTERMITENTE:'warn',SIN_VOLTAJE:'warn',CONGELADO:'crit
 const CLS_LAB={get 1(){return t('sensor congelado')},get 2(){return t('hueco del sensor')},get 3(){return t('caída del sistema')}};
 const shp=(st,px)=>'<svg class="s-'+st+'" width="'+px+'" height="'+px+'" viewBox="-14 -14 28 28" aria-hidden="true">'+SHAPE[st]+'</svg>';
 
-const state={range:20,id:null,tab:'consumo',month:DATAMONTH};
+const state={range:30,id:null,tab:'consumo',month:DATAMONTH};
 const MESES=MESES_L.es;
 const NOM=()=>state.month!==DATAMONTH;
 const monthName=i=>MESES_L[LANG][i];
@@ -1923,7 +1929,7 @@ try{
   const q=new URLSearchParams(location.hash.slice(1));
   if(HOUSES.some(h=>h.codigo===q.get('v')))state.id=q.get('v');
   if(MESES.some((n,i)=>DATAYEAR+'-'+String(i+1).padStart(2,'0')===q.get('m')))state.month=q.get('m');
-  if([7,14,20].includes(+q.get('n')))state.range=+q.get('n');
+  if([1,3,7,14,30].includes(+q.get('n')))state.range=+q.get('n');
 }catch(e){}
 setLang(LANG);
 requestAnimationFrame(refit);
