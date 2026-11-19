@@ -1,5 +1,6 @@
-import json
 import csv
+import json
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -61,6 +62,48 @@ def append_csv_reading(
         writer.writerow(reading)
 
     return path
+
+
+def insert_raw_readings(
+    records: list[dict[str, Any]],
+    *,
+    supabase_url: str | None = None,
+    service_key: str | None = None,
+) -> bool:
+    """
+    Envía lecturas directamente a la tabla 'lecturas_raw' de Supabase vía HTTP REST.
+    No toca el disco de la máquina local / Raspberry Pi.
+    """
+    url = (supabase_url or os.environ.get("SUPABASE_URL", "")).rstrip("/")
+    key = service_key or os.environ.get("SUPABASE_SERVICE_KEY", "")
+
+    if not url or not key or not records:
+        return False
+
+    import urllib.request
+    import urllib.error
+
+    endpoint = f"{url}/rest/v1/lecturas_raw"
+    data = json.dumps(records, ensure_ascii=False).encode("utf-8")
+
+    req = urllib.request.Request(
+        endpoint,
+        data=data,
+        method="POST",
+        headers={
+            "apikey": key,
+            "Authorization": f"Bearer {key}",
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal",
+        },
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=15) as res:
+            return res.status in (200, 201)
+    except Exception as error:
+        print(f"ADVERTENCIA: Falló el insert en Supabase lecturas_raw: {error}")
+        return False
 
 def flatten_sensor_reading(
     *,

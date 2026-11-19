@@ -17,7 +17,7 @@ from src.devices import (
 )
 from src.normalizers.common import extract_properties
 from src.normalizers.registry import normalize_by_type
-from src.storage import flatten_sensor_reading
+from src.storage import flatten_sensor_reading, insert_raw_readings
 from src.tuya_client import TuyaApiError, TuyaClient
 
 
@@ -385,6 +385,33 @@ def collect_vivienda_reading(
     calculate_vivienda_totals(
         vivienda_reading
     )
+
+    # Subir lectura de cada sensor a la tabla 'lecturas_raw' de Supabase
+    raw_records = []
+    for sensor in sensores:
+        device_code = sensor.get("codigo")
+        if not device_code or f"{device_code}_phase_a_voltage_v" not in vivienda_reading:
+            continue
+        record = {
+            "created_at": timestamp,
+            "codigo_vivienda": vivienda_code,
+            "codigo_sensor": device_code,
+            "voltaje_a": vivienda_reading.get(f"{device_code}_phase_a_voltage_v"),
+            "voltaje_b": vivienda_reading.get(f"{device_code}_phase_b_voltage_v"),
+            "corriente_a": vivienda_reading.get(f"{device_code}_phase_a_current_a"),
+            "corriente_b": vivienda_reading.get(f"{device_code}_phase_b_current_a"),
+            "potencia_a_w": vivienda_reading.get(f"{device_code}_phase_a_power_w"),
+            "potencia_b_w": vivienda_reading.get(f"{device_code}_phase_b_power_w"),
+            "potencia_total_w": vivienda_reading.get(f"{device_code}_power_sum_w"),
+            "factor_potencia": vivienda_reading.get(f"{device_code}_phase_a_power_factor"),
+            "frecuencia_hz": vivienda_reading.get(f"{device_code}_phase_a_frequency_hz"),
+            "energia_fwd_kwh": vivienda_reading.get(f"{device_code}_forward_energy_total_kwh"),
+            "energia_rev_kwh": vivienda_reading.get(f"{device_code}_reverse_energy_total_kwh"),
+        }
+        raw_records.append(record)
+
+    if raw_records:
+        insert_raw_readings(raw_records)
 
     return vivienda_reading
 
