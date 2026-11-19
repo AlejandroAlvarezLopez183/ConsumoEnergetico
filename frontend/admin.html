@@ -1785,28 +1785,51 @@ async function renderLive(h){
       if(r.voltaje_b) byTs[t].vb=r.voltaje_b;
     });
 
-    const pts=Object.values(byTs);
+    const pts=Object.values(byTs).map(p=>({
+      ...p,
+      time: new Date(p.ts).getTime()
+    })).sort((a,b)=>a.time-b.time);
+
     const n=pts.length;
+    const tMin = pts[0].time;
+    const tMax = pts[n-1].time;
+    const timeSpan = Math.max(tMax - tMin, 60000); // al menos 1 min
+
+    const firstStr = fmtDT(pts[0].ts);
+    const lastStr = fmtDT(pts[n-1].ts);
+    $('#liveNotePot').textContent = `${n} mediciones (${firstStr} → ${lastStr})`;
+
     const W=Math.max(260, Math.floor(elP.clientWidth)), H=230, ml=44, mr=12, mt=12, mb=24, pw=W-ml-mr, ph=H-mt-mb;
+
+    // Posición X en base al tiempo real
+    const x = t => ml + (timeSpan > 0 ? ((t - tMin) / timeSpan) * pw : pw / 2);
 
     // 1. Gráfica de Potencia W
     const maxP=Math.max(...pts.map(p=>p.pot), 10)*1.15;
     const yP=v=>mt+ph*(1-Math.max(0,v)/maxP);
-    const x=k=>ml+(n>1?k*pw/(n-1):pw/2);
 
     let pathP='', dotsP='';
-    pts.forEach((p,k)=>{
-      const px=x(k), py=yP(p.pot);
-      pathP += (k===0?'M':'L')+px.toFixed(1)+' '+py.toFixed(1);
+    let lastTime = null;
+    const GAP_LIMIT_MS = 25 * 60 * 1000; // si hay más de 25 min sin datos, cortar la línea
+
+    pts.forEach((p)=>{
+      const px=x(p.time), py=yP(p.pot);
+      if(lastTime !== null && (p.time - lastTime) > GAP_LIMIT_MS){
+        pathP += ' M' + px.toFixed(1) + ' ' + py.toFixed(1); // brecha sin conectar
+      } else {
+        pathP += (pathP==='' ? 'M' : ' L') + px.toFixed(1) + ' ' + py.toFixed(1);
+      }
       dotsP += '<circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="3.2" fill="#2a78d6"><title>'+fmtDT(p.ts)+' · '+p.pot.toFixed(1)+' W</title></circle>';
+      lastTime = p.time;
     });
 
+    // Etiquetas X espaciadas en el tiempo
     let xl='';
     const stepLab=Math.max(1, Math.ceil(n/6));
     pts.forEach((p,k)=>{
       if(k%stepLab===0 || k===n-1){
         const tm=p.ts.includes('T')?p.ts.split('T')[1].slice(0,5):p.ts.slice(11,16);
-        xl+='<text class="tk" x="'+x(k).toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle">'+tm+'</text>';
+        xl+='<text class="tk" x="'+x(p.time).toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle">'+tm+'</text>';
       }
     });
 
@@ -1823,15 +1846,27 @@ async function renderLive(h){
     const yV=v=>mt+ph*(1-(v-minV)/(maxV-minV||1));
 
     let pathA='', pathB='', dotsV='';
-    pts.forEach((p,k)=>{
-      const px=x(k);
+    let lastTimeA = null, lastTimeB = null;
+
+    pts.forEach((p)=>{
+      const px=x(p.time);
       if(p.va){
-        pathA += (pathA===''?'M':'L')+px.toFixed(1)+' '+yV(p.va).toFixed(1);
+        if(lastTimeA !== null && (p.time - lastTimeA) > GAP_LIMIT_MS){
+          pathA += ' M' + px.toFixed(1) + ' ' + yV(p.va).toFixed(1);
+        } else {
+          pathA += (pathA==='' ? 'M' : ' L') + px.toFixed(1) + ' ' + yV(p.va).toFixed(1);
+        }
         dotsV += '<circle cx="'+px.toFixed(1)+'" cy="'+yV(p.va).toFixed(1)+'" r="2.8" fill="#2a78d6"><title>'+fmtDT(p.ts)+' Fase A: '+p.va.toFixed(1)+' V</title></circle>';
+        lastTimeA = p.time;
       }
       if(p.vb){
-        pathB += (pathB===''?'M':'L')+px.toFixed(1)+' '+yV(p.vb).toFixed(1);
+        if(lastTimeB !== null && (p.time - lastTimeB) > GAP_LIMIT_MS){
+          pathB += ' M' + px.toFixed(1) + ' ' + yV(p.vb).toFixed(1);
+        } else {
+          pathB += (pathB==='' ? 'M' : ' L') + px.toFixed(1) + ' ' + yV(p.vb).toFixed(1);
+        }
         dotsV += '<circle cx="'+px.toFixed(1)+'" cy="'+yV(p.vb).toFixed(1)+'" r="2.8" fill="#eb6834"><title>'+fmtDT(p.ts)+' Fase B: '+p.vb.toFixed(1)+' V</title></circle>';
+        lastTimeB = p.time;
       }
     });
 

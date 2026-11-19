@@ -116,15 +116,17 @@ async function loadAll() {
   return out;
 }
 
-async function loadRaw(codigo, limit = 200) {
+async function loadRaw(codigo, limit = 144) {
   if (DEMO || !sb) return [];
+  // Traer las lecturas más recientes (las últimas 24h)
   const { data, error } = await sb.from('lecturas_raw')
     .select('created_at,codigo_sensor,potencia_total_w,voltaje_a,voltaje_b')
     .eq('codigo_vivienda', codigo)
-    .order('created_at', { ascending: true })
+    .order('created_at', { ascending: false })
     .limit(limit);
   if (error) throw error;
-  return data || [];
+  // Invertir para que queden en orden cronológico izquierda -> derecha
+  return (data || []).reverse();
 }
 
 window.SNRGY = { DEMO, $, t, addEN, applyStatic, setLang, bindLang, lang: () => LANG,
