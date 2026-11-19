@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -58,6 +59,7 @@ def _request(
     content_type: str | None = None,
     extra_headers: dict | None = None,
     timeout: int = 60,
+    max_retries: int = 3,
 ) -> bytes:
     url, key, _bucket = _settings()
     headers = {
@@ -76,15 +78,29 @@ def _request(
         headers=headers,
     )
 
-    try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
-            return response.read()
-    except urllib.error.HTTPError as error:
-        body = error.read().decode("utf-8", errors="replace")[:500]
-        raise StorageError(
-            error.code,
-            f"Storage {error.code} {method} {path}: {body}",
-        ) from error
+    last_error = None
+    for attempt in range(1, max_retries + 1):
+        try:
+            with urllib.request.urlopen(request, timeout=timeout) as response:
+                return response.read()
+        except urllib.error.HTTPError as error:
+            body = error.read().decode("utf-8", errors="replace")[:500]
+            # Errores 4xx de cliente (excepto 429 rate limit) no se reintentan
+            if error.code < 500 and error.code != 429:
+                raise StorageError(
+                    error.code,
+                    f"Storage {error.code} {method} {path}: {body}",
+                ) from error
+            last_error = StorageError(error.code, f"HTTP {error.code}: {body}")
+        except Exception as error:
+            last_error = error
+
+        if attempt < max_retries:
+            wait_time = attempt * 3
+            print(f"Aviso red/storage: {last_error}. Reintentando en {wait_time}s ({attempt}/{max_retries})...")
+            time.sleep(wait_time)
+
+    raise last_error
 
 
 def ensure_bucket() -> str:
@@ -156,28 +172,36 @@ def list_csv_objects() -> list[str]:
 def download_csvs(directory: Path = LOCAL_DIRECTORY) -> int:
     """Restaura los CSV del bucket sobre `data/viviendas`."""
 
-    ensure_bucket()
     directory.mkdir(parents=True, exist_ok=True)
-    _url, _key, bucket = _settings()
-    names = list_csv_objects()
+    existing_local = list(directory.glob("*.csv"))
 
-    if not names:
-        print("Storage no tiene CSV todavía; se parte de cero en esta corrida.")
-        return 0
+    try:
+        ensure_bucket()
+        _url, _key, bucket = _settings()
+        names = list_csv_objects()
 
-    for name in names:
-        object_path = f"{OBJECT_PREFIX}/{name}"
-        content = _request(
-            method="GET",
-            path=f"/storage/v1/object/{bucket}/{object_path}",
-            timeout=120,
-        )
-        destination = directory / Path(name).name
-        destination.write_bytes(content)
-        print(f"Restaurado {destination} ({len(content)} bytes)")
+        if not names:
+            print("Storage no tiene CSV todavía; se parte de cero en esta corrida.")
+            return 0
 
-    print(f"Restaurados {len(names)} CSV desde Storage.")
-    return len(names)
+        for name in names:
+            object_path = f"{OBJECT_PREFIX}/{name}"
+            content = _request(
+                method="GET",
+                path=f"/storage/v1/object/{bucket}/{object_path}",
+                timeout=120,
+            )
+            destination = directory / Path(name).name
+            destination.write_bytes(content)
+            print(f"Restaurado {destination} ({len(content)} bytes)")
+
+        print(f"Restaurados {len(names)} CSV desde Storage.")
+        return len(names)
+    except Exception as error:
+        if existing_local:
+            print(f"ADVERTENCIA: Falló la sincronización con Storage ({error}), pero se encontraron {len(existing_local)} CSV locales. Usando copia local existente.")
+            return len(existing_local)
+        raise
 
 
 def upload_csvs(directory: Path = LOCAL_DIRECTORY) -> int:
