@@ -116,6 +116,17 @@ async function loadAll() {
   return out;
 }
 
+async function loadRaw(codigo, limit = 200) {
+  if (DEMO || !sb) return [];
+  const { data, error } = await sb.from('lecturas_raw')
+    .select('created_at,codigo_sensor,potencia_total_w,voltaje_a,voltaje_b')
+    .eq('codigo_vivienda', codigo)
+    .order('created_at', { ascending: true })
+    .limit(limit);
+  if (error) throw error;
+  return data || [];
+}
+
 window.SNRGY = { DEMO, $, t, addEN, applyStatic, setLang, bindLang, lang: () => LANG,
-  perfil, login, logout, require, homeFor, loadMeta, loadHouse, loadAll, DEMO_USERS };
+  perfil, login, logout, require, homeFor, loadMeta, loadHouse, loadAll, loadRaw, DEMO_USERS };
 })();

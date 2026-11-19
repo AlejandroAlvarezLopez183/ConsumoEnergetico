@@ -1762,21 +1762,11 @@ function drawTab(){
 /* ---------- alta resolución 10 min (lecturas_raw) ---------- */
 async function renderLive(h){
   const elP=$('#chLivePower'), elV=$('#chLiveVolt');
-  if(!window.supabaseClient){
-    elP.innerHTML='<div class="empty">Requiere conexión a Supabase.</div>';
-    return;
-  }
   elP.innerHTML='<div class="empty">Consultando lecturas de 10 minutos en tiempo real...</div>';
   elV.innerHTML='';
   try{
-    const {data, error}=await window.supabaseClient
-      .from('lecturas_raw')
-      .select('created_at,codigo_sensor,potencia_total_w,voltaje_a,voltaje_b')
-      .eq('codigo_vivienda', h.codigo)
-      .order('created_at', {ascending: true})
-      .limit(200);
+    const data = await SNRGY.loadRaw(h.codigo, 200);
 
-    if(error) throw error;
     if(!data || !data.length){
       elP.innerHTML='<div class="empty">Aún no hay lecturas de alta frecuencia registradas para '+esc(h.codigo)+' en lecturas_raw.</div>';
       $('#liveNotePot').textContent='Sin lecturas en la tabla de 10 min';

@@ -73,15 +73,11 @@ def main() -> None:
     os.environ.setdefault("PYTHONPATH", str(ROOT))
     ensure_config()
 
-    archive = [PYTHON, "scripts/csv_archive.py"]
     collector = [PYTHON, "scripts/monitor_viviendas.py", "--once"]
     etl = [PYTHON, "scripts/build_dataset.py", "--subir"]
 
-    run_step("Restaurar CSV", archive + ["download"], required=True)
-    run_step("Recolectar Tuya", collector, required=True)
-
-    etl_code = run_step("ETL y subida a Supabase", etl, required=False)
-    run_step("Archivar CSV", archive + ["upload"], required=True)
+    run_step("Recolectar Tuya -> Supabase lecturas_raw", collector, required=True)
+    etl_code = run_step("ETL y consolidado horario a Supabase", etl, required=False)
 
     if etl_code != 0:
         raise SystemExit(

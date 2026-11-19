@@ -534,23 +534,6 @@ def main() -> None:
                     vivienda_name,
                 )
 
-                filename = (
-                    safe_filename(
-                        vivienda_code
-                    )
-                    + ".csv"
-                )
-
-                output_file = (
-                    OUTPUT_DIRECTORY
-                    / filename
-                )
-
-                save_vivienda_reading(
-                    reading,
-                    output_file=output_file,
-                )
-
                 total_power = reading.get(
                     "total_power_w"
                 )
@@ -564,7 +547,7 @@ def main() -> None:
                     f"{reading['dispositivos_configurados']} | "
                     f"potencia total="
                     f"{total_power} W | "
-                    f"{output_file}"
+                    f"-> Supabase lecturas_raw"
                 )
 
             if args.once:
