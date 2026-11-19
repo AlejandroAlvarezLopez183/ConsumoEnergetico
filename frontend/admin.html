@@ -1522,10 +1522,28 @@ function lineChart(el,cfg){
     yl+='<text class="tk" x="'+(ml-6)+'" y="'+(y(vv)+4).toFixed(1)+'" text-anchor="end">'+fmt(vv,dc)+'</text>';
   }
   if(dom.lo<0&&dom.hi>0)g+='<line class="base" x1="'+ml+'" x2="'+(W-mr)+'" y1="'+y(0).toFixed(1)+'" y2="'+y(0).toFixed(1)+'"/>';
-  const nd=n/24,maxLab=Math.max(2,Math.floor(pw/66)),every=Math.max(1,Math.ceil(nd/maxLab));let xl='';
-  for(let j=0;j<nd;j+=every){
-    const px=x(j*24),an=px<ml+20?'start':px>W-mr-24?'end':'middle';
-    xl+='<text class="tk" x="'+px.toFixed(1)+'" y="'+(H-6)+'" text-anchor="'+an+'">'+dLab(cfg.d0+j)+'</text>';
+  const nd=n/24;
+  let xl='';
+  if(nd<=1){
+    // 1 día: mostrar horas a lo largo del día
+    for(let h=0; h<24; h+=4){
+      const px=x(h), an=px<ml+20?'start':px>W-mr-24?'end':'middle';
+      xl+='<text class="tk" x="'+px.toFixed(1)+'" y="'+(H-6)+'" text-anchor="'+an+'">'+String(h).padStart(2,'0')+':00</text>';
+    }
+  } else if(nd<=3){
+    // 2-3 días: mostrar día y tramos de 12 horas
+    for(let k=0; k<n; k+=12){
+      const px=x(k), an=px<ml+20?'start':px>W-mr-24?'end':'middle';
+      const dIdx=Math.floor(k/24), hh=String(k%24).padStart(2,'0')+':00';
+      xl+='<text class="tk" x="'+px.toFixed(1)+'" y="'+(H-6)+'" text-anchor="'+an+'">'+dLab(cfg.d0+dIdx)+' '+hh+'</text>';
+    }
+  } else {
+    // 7+ días: mostrar nombres de días
+    const maxLab=Math.max(2,Math.floor(pw/66)), every=Math.max(1,Math.ceil(nd/maxLab));
+    for(let j=0;j<nd;j+=every){
+      const px=x(j*24),an=px<ml+20?'start':px>W-mr-24?'end':'middle';
+      xl+='<text class="tk" x="'+px.toFixed(1)+'" y="'+(H-6)+'" text-anchor="'+an+'">'+dLab(cfg.d0+j)+'</text>';
+    }
   }
   const sw=n>1?pw/(n-1):pw;
   const bands=runs(cfg.cls,c=>c!==0).map(([a,b])=>{const x0=Math.max(ml,x(a)-sw/2),x1=Math.min(W-mr,x(b)+sw/2);return '<rect class="band" x="'+x0.toFixed(1)+'" y="'+mt+'" width="'+(x1-x0).toFixed(1)+'" height="'+ph+'" fill="url(#'+uid+')"/>'}).join('');
